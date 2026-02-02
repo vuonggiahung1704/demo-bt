@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [local, dev, prod]
+    Default: dev
+
+Globals:
+  Function:
+    Runtime: python3.10
+    Timeout: 20
+    MemorySize: 256
+    Environment:
+      Variables:
+        ENV: !Ref Environment
+
+Resources:
+  UserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: controllers.user_controller.lambda_handler
+      Environment:
+        Variables:
+          USER_TABLE: !Ref UserTable
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            Path: /users/{id}
+            Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserTable
+
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'users-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
