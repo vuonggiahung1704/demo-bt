@@ -8,6 +8,8 @@ class UserRepository:
         self.table = dynamodb.Table(USER_TABLE)
 
     def get(self, user_id):
-        res = self.table.get_item(Key={"pk": user_id})
+        print("DEBUG - USER_TABLE:", USER_TABLE)
+        print("DEBUG - user_id:", user_id, type(user_id))
+        res = self.table.get_item(Key={"Id": user_id})
         item = res.get("Item")
         return User.from_dict(item) if item else None
